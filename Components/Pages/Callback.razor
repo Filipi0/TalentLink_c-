@@ -1,0 +1,51 @@
+@page "/auth/callback"
+@layout EmptyLayout
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+@* Página invisível - redireciona imediatamente *@
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        
+        try
+        {
+            // Pegar parâmetros da URL conforme o backend envia
+            var uri = new Uri(Navigation.Uri);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            
+            var token = query["token"];
+            var userJson = query["user"];
+            var error = query["error"];
+
+            if (!string.IsNullOrEmpty(error))
+            {
+                // Redirecionar para login em caso de erro
+                Navigation.NavigateTo("/login");
+                return;
+            }
+            
+            if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(userJson))
+            {
+                // Salvar no localStorage via JavaScript - SEM mostrar nada
+                await JSRuntime.InvokeVoidAsync("localStorage.setItem", "token", token);
+                await JSRuntime.InvokeVoidAsync("localStorage.setItem", "user", userJson);
+                
+                // Redirecionar IMEDIATAMENTE para dashboard
+                Navigation.NavigateTo("/dashboard");
+                return;
+            }
+            
+            // Se não tem parâmetros válidos, volta para login
+            Navigation.NavigateTo("/login");
+        }
+        catch (Exception)
+        {
+            // Em caso de erro, volta para login
+            Navigation.NavigateTo("/login");
+        }
+    }
+}

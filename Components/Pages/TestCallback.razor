@@ -1,0 +1,67 @@
+@page "/test-callback"
+@layout EmptyLayout
+@inject NavigationManager Navigation
+
+<div style="padding: 20px; background: white; min-height: 100vh;">
+    <h1>🔍 Test Callback Page</h1>
+    <p><strong>URL Completa:</strong></p>
+    <pre style="background: #f5f5f5; padding: 10px; border-radius: 5px;">@Navigation.Uri</pre>
+    
+    <p><strong>Query String:</strong></p>
+    <pre style="background: #f5f5f5; padding: 10px; border-radius: 5px;">@queryString</pre>
+    
+    <p><strong>Parâmetros:</strong></p>
+    <ul>
+        <li><strong>token:</strong> @token</li>
+        <li><strong>user:</strong> @userJson</li>
+        <li><strong>error:</strong> @error</li>
+    </ul>
+    
+    <hr />
+    <p><strong>Todos os parâmetros encontrados:</strong></p>
+    <ul>
+        @foreach (var param in allParams)
+        {
+            <li><strong>@param.Key:</strong> @param.Value</li>
+        }
+    </ul>
+    
+    <hr />
+    <a href="/login" class="btn btn-primary">← Voltar para Login</a>
+</div>
+
+@code {
+    private string queryString = "";
+    private string token = "";
+    private string userJson = "";
+    private string error = "";
+    private Dictionary<string, string> allParams = new();
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            var uri = new Uri(Navigation.Uri);
+            queryString = uri.Query;
+            
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            
+            token = query["token"] ?? "não encontrado";
+            userJson = query["user"] ?? "não encontrado";
+            error = query["error"] ?? "não encontrado";
+            
+            // Pegar todos os parâmetros
+            foreach (string key in query.AllKeys)
+            {
+                if (key != null)
+                {
+                    allParams[key] = query[key] ?? "";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            error = $"Erro: {ex.Message}";
+        }
+    }
+}

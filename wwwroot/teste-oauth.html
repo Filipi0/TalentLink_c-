@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste de Redirecionamento</title>
+</head>
+<body>
+    <h1>Teste do Fluxo OAuth</h1>
+    <p>Clique nos links abaixo para testar diferentes cenários:</p>
+    
+    <h3>✅ Teste com Sucesso:</h3>
+    <a href="http://localhost:3000/auth/callback?token=abc123token&user={%22name%22:%22João%20Silva%22,%22email%22:%22joao@teste.com%22}" 
+       target="_blank" style="color: green; display: block; margin: 10px 0;">
+       🟢 Simular Login com Sucesso
+    </a>
+    
+    <h3>❌ Teste com Erro:</h3>
+    <a href="http://localhost:3000/auth/callback?error=access_denied" 
+       target="_blank" style="color: red; display: block; margin: 10px 0;">
+       🔴 Simular Erro de Acesso
+    </a>
+    
+    <h3>🤔 Teste sem Parâmetros:</h3>
+    <a href="http://localhost:3000/auth/callback" 
+       target="_blank" style="color: orange; display: block; margin: 10px 0;">
+       🟡 Simular Callback Vazio
+    </a>
+    
+    <hr>
+    <p><strong>Instruções:</strong></p>
+    <ol>
+        <li>Clique em um dos links acima</li>
+        <li>Veja qual tela aparece</li>
+        <li>Verifique o console do navegador (F12)</li>
+        <li>Me conte o que aconteceu</li>
+    </ol>
+    
+    <hr>
+    <a href="http://localhost:3000/login" style="color: blue;">← Voltar para Login</a>
+</body>
+</html>

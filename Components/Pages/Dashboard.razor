@@ -1,0 +1,127 @@
+@page "/dashboard"
+@layout CleanLayout
+@using Microsoft.AspNetCore.Components.Web
+@using talentlink.Services
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@inject IApiService ApiService
+
+<PageTitle>Dashboard - TalentLink</PageTitle>
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="welcome-section">
+            <h1 class="dashboard-title">Bem-vindo ao TalentLink!</h1>
+            <p class="dashboard-subtitle">Aqui você encontrará as melhores oportunidades de trabalho</p>
+        </div>
+        <div class="user-actions">
+            <button class="btn btn-outline-danger" @onclick="Logout">
+                <svg width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right me-1" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
+                    <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
+                </svg>
+                Sair
+            </button>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg width="24" height="24" fill="currentColor" class="bi bi-briefcase" viewBox="0 0 16 16">
+                        <path d="M6.5 1A1.5 1.5 0 0 0 5 2.5V3H1.5A1.5 1.5 0 0 0 0 4.5v8A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 14.5 3H11v-.5A1.5 1.5 0 0 0 9.5 1h-3zm0 1h3a.5.5 0 0 1 .5.5V3H6v-.5a.5.5 0 0 1 .5-.5z"/>
+                        <path d="M1 4.5A.5.5 0 0 1 1.5 4h13a.5.5 0 0 1 .5.5v1H1v-1z"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <h3>Vagas Disponíveis</h3>
+                    <p class="stat-number">150+</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg width="24" height="24" fill="currentColor" class="bi bi-person-check" viewBox="0 0 16 16">
+                        <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zm1.679-4.493-1.335 2.226a.75.75 0 0 1-1.174.144l-.774-.773a.5.5 0 0 1 .708-.708l.547.548 1.17-1.951a.5.5 0 1 1 .858.514zM11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                        <path d="M2 13c0 1 1 1 1 1h5.256A4.493 4.493 0 0 1 8 12.5a4.49 4.49 0 0 1 1.544-3.393C9.077 9.038 8.564 9 8 9c-5 0-6 3-6 4z"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <h3>Candidaturas</h3>
+                    <p class="stat-number">0</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg width="24" height="24" fill="currentColor" class="bi bi-heart" viewBox="0 0 16 16">
+                        <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <h3>Favoritas</h3>
+                    <p class="stat-number">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="recent-jobs">
+            <h2>Oportunidades Recentes</h2>
+            <div class="job-list">
+                <div class="job-card">
+                    <div class="job-header">
+                        <h3>Desenvolvedor Full Stack</h3>
+                        <span class="company">TechCorp</span>
+                    </div>
+                    <div class="job-details">
+                        <span class="location">São Paulo, SP</span>
+                        <span class="salary">R$ 8.000 - R$ 12.000</span>
+                    </div>
+                    <div class="job-tags">
+                        <span class="tag">React</span>
+                        <span class="tag">Node.js</span>
+                        <span class="tag">Remote</span>
+                    </div>
+                </div>
+
+                <div class="job-card">
+                    <div class="job-header">
+                        <h3>UX/UI Designer</h3>
+                        <span class="company">Design Studio</span>
+                    </div>
+                    <div class="job-details">
+                        <span class="location">Rio de Janeiro, RJ</span>
+                        <span class="salary">R$ 6.000 - R$ 9.000</span>
+                    </div>
+                    <div class="job-tags">
+                        <span class="tag">Figma</span>
+                        <span class="tag">Adobe XD</span>
+                        <span class="tag">Híbrido</span>
+                    </div>
+                </div>
+
+                <div class="empty-state">
+                    <p>🚀 <strong>Em breve:</strong> Integração completa com a API para exibir vagas reais!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private async Task Logout()
+    {
+        try
+        {
+            // Obter URL de logout do serviço
+            var logoutUrl = ApiService.GetLogoutUrl();
+            await JSRuntime.InvokeVoidAsync("open", logoutUrl, "_self");
+        }
+        catch (Exception)
+        {
+            // Se houver erro, redirecionar para a página de login
+            Navigation.NavigateTo("/login");
+        }
+    }
+}
