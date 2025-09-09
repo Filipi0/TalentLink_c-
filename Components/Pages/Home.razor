@@ -1,0 +1,19 @@
+﻿@page "/"
+@inject NavigationManager Navigation
+
+<PageTitle>TalentLink</PageTitle>
+
+<div style="text-align: center; padding: 50px;">
+    <h1>Bem-vindo ao TalentLink</h1>
+    <p>Conectando talentos às melhores oportunidades</p>
+    <button class="btn btn-primary" @onclick="GoToLogin">
+        Fazer Login
+    </button>
+</div>
+
+@code {
+    private void GoToLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+}
