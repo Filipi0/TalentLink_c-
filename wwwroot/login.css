@@ -89,6 +89,26 @@ html, body {
     font-weight: 400;
 }
 
+/* Welcome Message */
+.welcome-message {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.welcome-message h2 {
+    color: var(--dark-blue);
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+}
+
+.welcome-message p {
+    color: var(--text-gray);
+    font-size: 15px;
+    margin: 0;
+    line-height: 1.5;
+}
+
 .login-form {
     margin-bottom: 32px;
 }
@@ -185,6 +205,14 @@ html, body {
 .btn-google:disabled {
     opacity: 0.7;
     cursor: not-allowed;
+    transform: none;
+}
+
+.btn-google:disabled:hover {
+    background: var(--white);
+    border-color: var(--border-gray);
+    transform: none;
+    box-shadow: none;
 }
 
 .google-icon {
@@ -205,6 +233,30 @@ html, body {
     text-align: center;
     border-top: 1px solid var(--border-gray);
     padding-top: 24px;
+}
+
+/* Features List */
+.features-list {
+    margin-top: 20px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    color: var(--text-gray);
+    font-size: 14px;
+}
+
+.feature-item:last-child {
+    margin-bottom: 0;
+}
+
+.feature-icon {
+    margin-right: 8px;
+    color: var(--success-green);
+    flex-shrink: 0;
 }
 
 .forgot-password-link {
@@ -249,6 +301,12 @@ html, body {
     background-color: #fef2f2;
     border: 1px solid #fecaca;
     color: var(--error-red);
+}
+
+.alert-info {
+    background-color: #f0f9ff;
+    border: 1px solid #bae6fd;
+    color: var(--primary-blue);
 }
 
 .login-card .validation-message {
