@@ -2,6 +2,8 @@
 
 **Conectando talentos às melhores oportunidades**
 
+dotnet watch
+
 ## 📋 Descrição
 
 TalentLink é uma plataforma moderna desenvolvida em Blazor Server (.NET 9) que conecta profissionais talentosos com as melhores oportunidades de trabalho disponíveis no mercado.
