@@ -7,8 +7,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Register API service
-builder.Services.AddScoped<IApiService, ApiService>();
+// Register HTTP client and services
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<ApiService>();
+builder.Services.AddScoped<OpportunityService>();
 
 var app = builder.Build();
 

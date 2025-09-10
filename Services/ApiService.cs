@@ -5,19 +5,18 @@ namespace talentlink.Services
         public string BaseUrl { get; set; } = string.Empty;
     }
 
-    public interface IApiService
-    {
-        string GetAuthUrl(string userType);
-        string GetLogoutUrl();
-    }
-
-    public class ApiService : IApiService
+    public class ApiService
     {
         private readonly ApiConfiguration _config;
 
         public ApiService(IConfiguration configuration)
         {
             _config = configuration.GetSection("TalentLinkApi").Get<ApiConfiguration>() ?? new ApiConfiguration();
+        }
+
+        public string GetBaseUrl()
+        {
+            return _config.BaseUrl;
         }
 
         public string GetAuthUrl(string userType)

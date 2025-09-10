@@ -1,10 +1,10 @@
 @page "/dashboard"
 @layout CleanLayout
-@using Microsoft.AspNetCore.Components.Web
-@using talentlink.Services
-@inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
-@inject IApiService ApiService
+@inject NavigationManager Navigation
+@inject OpportunityService OpportunityService
+@inject ILogger<Dashboard> Logger
+@rendermode InteractiveServer
 
 <PageTitle>Dashboard - TalentLink</PageTitle>
 
@@ -15,7 +15,8 @@
             <p class="dashboard-subtitle">Aqui você encontrará as melhores oportunidades de trabalho</p>
         </div>
         <div class="user-actions">
-            <button class="btn btn-outline-danger" @onclick="Logout">
+            <span class="user-welcome">Olá, @userName! 👋</span>
+            <button class="btn btn-outline-danger ms-3" @onclick="Logout">
                 <svg width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right me-1" viewBox="0 0 16 16">
                     <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
                     <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
@@ -36,7 +37,7 @@
                 </div>
                 <div class="stat-info">
                     <h3>Vagas Disponíveis</h3>
-                    <p class="stat-number">150+</p>
+                    <p class="stat-number">@opportunities.Count</p>
                 </div>
             </div>
 
@@ -66,61 +67,339 @@
             </div>
         </div>
 
+        <!-- Filtros de Busca -->
+        <div class="search-section">
+            <h3>🔍 Buscar Oportunidades</h3>
+            <div class="row g-3 mt-2">
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="searchQuery" placeholder="Ex: desenvolvedor" 
+                               @bind="searchQuery" @onkeypress="OnSearchKeyPress">
+                        <label for="searchQuery">Palavra-chave</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="searchLocation" placeholder="Ex: São Paulo" 
+                               @bind="searchLocation" @onkeypress="OnSearchKeyPress">
+                        <label for="searchLocation">Localização</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="searchSalary" placeholder="Ex: 5000-8000" 
+                               @bind="searchSalary" @onkeypress="OnSearchKeyPress">
+                        <label for="searchSalary">Faixa Salarial</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary h-100 w-100" @onclick="SearchOpportunities" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        Buscar
+                    </button>
+                </div>
+            </div>
+            
+            @if (hasFilters)
+            {
+                <div class="mt-3">
+                    <button class="btn btn-outline-secondary btn-sm" @onclick="ClearFilters">
+                        ❌ Limpar Filtros
+                    </button>
+                </div>
+            }
+        </div>
+
+        <!-- Status/Loading -->
+        @if (!string.IsNullOrEmpty(statusMessage))
+        {
+            <div class="alert @(isError ? "alert-danger" : "alert-info") mt-3" role="alert">
+                @statusMessage
+            </div>
+        }
+
+        <!-- Lista de Oportunidades -->
         <div class="recent-jobs">
-            <h2>Oportunidades Recentes</h2>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>
+                    @if (hasFilters)
+                    {
+                        <span>🔍 Resultados da Busca (@opportunities.Count)</span>
+                    }
+                    else
+                    {
+                        <span>📋 Oportunidades Disponíveis (@opportunities.Count)</span>
+                    }
+                </h2>
+                
+                @if (!hasFilters)
+                {
+                    <button class="btn btn-success" @onclick="LoadAllOpportunities" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        🔄 Atualizar
+                    </button>
+                }
+            </div>
+
             <div class="job-list">
-                <div class="job-card">
-                    <div class="job-header">
-                        <h3>Desenvolvedor Full Stack</h3>
-                        <span class="company">TechCorp</span>
+                @if (isLoading && opportunities.Count == 0)
+                {
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
+                        <p class="text-muted">Carregando oportunidades...</p>
                     </div>
-                    <div class="job-details">
-                        <span class="location">São Paulo, SP</span>
-                        <span class="salary">R$ 8.000 - R$ 12.000</span>
+                }
+                else if (opportunities.Count == 0 && !isLoading)
+                {
+                    <div class="empty-state">
+                        <div class="text-center py-5">
+                            <h4 class="text-muted">🤷‍♂️ Nenhuma oportunidade encontrada</h4>
+                            <p class="text-muted">
+                                @if (hasFilters)
+                                {
+                                    <span>Tente ajustar seus filtros de busca.</span>
+                                }
+                                else
+                                {
+                                    <span>Não há oportunidades disponíveis no momento.</span>
+                                }
+                            </p>
+                        </div>
                     </div>
-                    <div class="job-tags">
-                        <span class="tag">React</span>
-                        <span class="tag">Node.js</span>
-                        <span class="tag">Remote</span>
-                    </div>
-                </div>
-
-                <div class="job-card">
-                    <div class="job-header">
-                        <h3>UX/UI Designer</h3>
-                        <span class="company">Design Studio</span>
-                    </div>
-                    <div class="job-details">
-                        <span class="location">Rio de Janeiro, RJ</span>
-                        <span class="salary">R$ 6.000 - R$ 9.000</span>
-                    </div>
-                    <div class="job-tags">
-                        <span class="tag">Figma</span>
-                        <span class="tag">Adobe XD</span>
-                        <span class="tag">Híbrido</span>
-                    </div>
-                </div>
-
-                <div class="empty-state">
-                    <p>🚀 <strong>Em breve:</strong> Integração completa com a API para exibir vagas reais!</p>
-                </div>
+                }
+                else
+                {
+                    @foreach (var opportunity in opportunities)
+                    {
+                        <div class="job-card">
+                            <div class="job-header">
+                                <h3>@opportunity.Title</h3>
+                                <span class="company">@(string.IsNullOrEmpty(opportunity.CompanyId) ? "Empresa Parceira" : $"ID: {opportunity.CompanyId.Substring(0, Math.Min(8, opportunity.CompanyId.Length))}")</span>
+                            </div>
+                            <div class="job-details">
+                                <span class="location">📍 @opportunity.Location</span>
+                                <span class="salary">💰 @opportunity.SalaryRange</span>
+                            </div>
+                            <div class="job-description">
+                                <p>@opportunity.Description</p>
+                            </div>
+                            @if (!string.IsNullOrEmpty(opportunity.Requirements))
+                            {
+                                <div class="job-requirements">
+                                    <strong>📋 Requisitos:</strong> @opportunity.Requirements
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(opportunity.Benefits))
+                            {
+                                <div class="job-benefits">
+                                    <strong>🎁 Benefícios:</strong> @opportunity.Benefits
+                                </div>
+                            }
+                            <div class="job-footer">
+                                <span class="job-date">📅 @opportunity.CreatedAt.ToString("dd/MM/yyyy")</span>
+                                <button class="btn btn-primary btn-apply">
+                                    Candidatar-se
+                                </button>
+                            </div>
+                        </div>
+                    }
+                }
             </div>
         </div>
     </div>
 </div>
 
 @code {
+    private List<Opportunity> opportunities = new();
+    private string userName = "";
+    private string userToken = "";
+    
+    // Filtros de busca
+    private string searchQuery = "";
+    private string searchLocation = "";
+    private string searchSalary = "";
+    
+    // Estados da UI
+    private bool isLoading = false;
+    private string statusMessage = "";
+    private bool isError = false;
+    private bool hasFilters => !string.IsNullOrEmpty(searchQuery) || !string.IsNullOrEmpty(searchLocation) || !string.IsNullOrEmpty(searchSalary);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadUserData();
+            await LoadAllOpportunities();
+        }
+    }
+
+    private async Task LoadUserData()
+    {
+        try
+        {
+            // Carregar dados do usuário do localStorage
+            var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "token");
+            var userJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "user");
+
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(userJson))
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            userToken = token;
+            
+            // Parse do JSON do usuário
+            var userObj = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(userJson);
+            if (userObj != null && userObj.ContainsKey("name"))
+            {
+                userName = userObj["name"].ToString() ?? "Usuário";
+            }
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao carregar dados do usuário");
+            Navigation.NavigateTo("/login");
+        }
+    }
+
+    private async Task LoadAllOpportunities()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(userToken))
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            isLoading = true;
+            isError = false;
+            statusMessage = "Carregando oportunidades...";
+            StateHasChanged();
+
+            opportunities = await OpportunityService.GetAllOpportunitiesAsync(userToken);
+            
+            statusMessage = $"✅ {opportunities.Count} oportunidades carregadas";
+            
+            // Limpar mensagem após 3 segundos
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(3000);
+                statusMessage = "";
+                await InvokeAsync(StateHasChanged);
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            statusMessage = "❌ Sessão expirada. Faça login novamente.";
+            isError = true;
+            await Task.Delay(2000);
+            Navigation.NavigateTo("/login");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao carregar oportunidades");
+            statusMessage = $"❌ Erro ao carregar oportunidades: {ex.Message}";
+            isError = true;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SearchOpportunities()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(userToken))
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            isLoading = true;
+            isError = false;
+            statusMessage = "Buscando oportunidades...";
+            StateHasChanged();
+
+            var searchRequest = new SearchRequest
+            {
+                Query = string.IsNullOrEmpty(searchQuery) ? null : searchQuery,
+                Location = string.IsNullOrEmpty(searchLocation) ? null : searchLocation,
+                SalaryRange = string.IsNullOrEmpty(searchSalary) ? null : searchSalary
+            };
+
+            opportunities = await OpportunityService.SearchOpportunitiesAsync(userToken, searchRequest);
+            
+            statusMessage = $"🔍 {opportunities.Count} oportunidades encontradas";
+            
+            // Limpar mensagem após 3 segundos
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(3000);
+                statusMessage = "";
+                await InvokeAsync(StateHasChanged);
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            statusMessage = "❌ Sessão expirada. Faça login novamente.";
+            isError = true;
+            await Task.Delay(2000);
+            Navigation.NavigateTo("/login");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao buscar oportunidades");
+            statusMessage = $"❌ Erro na busca: {ex.Message}";
+            isError = true;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnSearchKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SearchOpportunities();
+        }
+    }
+
+    private async Task ClearFilters()
+    {
+        searchQuery = "";
+        searchLocation = "";
+        searchSalary = "";
+        await LoadAllOpportunities();
+    }
+
     private async Task Logout()
     {
         try
         {
-            // Obter URL de logout do serviço
-            var logoutUrl = ApiService.GetLogoutUrl();
-            await JSRuntime.InvokeVoidAsync("open", logoutUrl, "_self");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "token");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "user");
+            Navigation.NavigateTo("/login");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Se houver erro, redirecionar para a página de login
+            Logger.LogError(ex, "Erro no logout");
             Navigation.NavigateTo("/login");
         }
     }
